@@ -94,7 +94,7 @@ class NKUST:
             json.dump(news_storage, f, ensure_ascii=False, indent=4)
             print(f'{save_file_name} saved')
     
-    def get_activity(self, max_activity=-1):
+    def get_activity(self, max_item=-1):
         """
         主要為爬取活動資訊，以下是相關參數
         max_item: -1 means all activity, else means the number of activity
@@ -135,4 +135,4 @@ if __name__ == "__main__":
     nkust = NKUST()
     nkust.get_hot_news(max_page=1)
     nkust.get_honors(max_page=1)
-    nkust.get_activity(max_activity=10)
+    nkust.get_activity(max_item=10)
