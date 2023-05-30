@@ -14,8 +14,14 @@ class NKUST:
             "hot_news": f"{self.host}403-1000-1363-page.php?Lang={self.lang}",
             "honors": f"{self.host}403-1000-13-page.php?Lang={self.lang}",
             "activity" : f"https://ws1.nkust.edu.tw/Activity/#",
+            "about": f"https://www.nkust.edu.tw/p/412-1000-617.php"
         }
     
+    def write_to_json(self, file_name, data):
+        with open(file_name, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+            print(f'{file_name} saved')
+
     def get_target_news_url(self, news_type, max_page=-1):
         target_url = self.site_config[news_type]
         first_page = requests.get(target_url.replace('page','1'))
@@ -74,9 +80,7 @@ class NKUST:
             news_storage.append(result)
             tqdm.write(f"{result['date']} {result['title']}")
         save_file_name = f'hot_news_{time.strftime("%Y%m%d-%H%M%S")}.json'
-        with open(save_file_name, 'w', encoding='utf-8') as f:
-            json.dump(news_storage, f, ensure_ascii=False, indent=4)
-            print(f'{save_file_name} saved')
+        self.write_to_json(save_file_name, news_storage)
     
     def get_honors(self, max_page=-1):
         """
@@ -90,9 +94,7 @@ class NKUST:
             news_storage.append(result)
             tqdm.write(f"{result['date']} {result['title']}")
         save_file_name = f'honors_{time.strftime("%Y%m%d-%H%M%S")}.json'
-        with open(save_file_name, 'w', encoding='utf-8') as f:
-            json.dump(news_storage, f, ensure_ascii=False, indent=4)
-            print(f'{save_file_name} saved')
+        self.write_to_json(save_file_name, news_storage)
     
     def get_activity(self, max_item=-1):
         """
@@ -127,12 +129,52 @@ class NKUST:
                 'url': _url,
                 'content': content
             })
-        with open(f'activity_{time.strftime("%Y%m%d-%H%M%S")}.json', 'w', encoding='utf-8') as f:
-            json.dump(news_storage, f, ensure_ascii=False, indent=4)
-            print(f'activity_{time.strftime("%Y%m%d-%H%M%S")}.json saved')
+        save_file_name = f'activity_{time.strftime("%Y%m%d-%H%M%S")}.json'
+        self.write_to_json(save_file_name, news_storage)
+        
+    def get_about(self):
+        """
+        爬取關於我們
+        """
+        about_url = self.site_config['about']
+        result = requests.get(about_url).text
+        soup = BeautifulSoup(result, 'html.parser')
+        dropdown = soup.find('ul', class_='dropmenu-right')
+        li = dropdown.find_all('li')
+        li_a_href = [li.find('a')['href'] for li in li]
+
+        about_storage = []
+
+        for href in tqdm(li_a_href, desc='about'):
+            if href.startswith('/p/'):
+                result = requests.get(f"https://www.nkust.edu.tw{href}").text
+                _inner_soup = BeautifulSoup(result, 'html.parser')
+                content = _inner_soup.find('div', class_="mcont").text.strip()
+                content = re.sub(r'&#\d+;', '', content)
+                content = re.sub(r'&\w+;', '', content)
+                breadcrumb = _inner_soup.find('ol', class_='breadcrumb').text.strip()
+                breadcrumb = re.sub(r'&#\d+;', '', breadcrumb)
+                breadcrumb = re.sub(r'&\w+;', '', breadcrumb)
+                breadcrumb = breadcrumb.replace('\n', '')
+                breadcrumb = breadcrumb.replace('首頁關於我們','')
+                tqdm.write(f"{breadcrumb}")
+                about_storage.append({
+                    'title': breadcrumb,
+                    'url': f"https://www.nkust.edu.tw{href}",
+                    'content': content
+                })
+            else:
+                """
+                TODO: 爬取其他關於我們的資訊
+                """
+                pass
+        save_file_name = f'about_{time.strftime("%Y%m%d-%H%M%S")}.json'
+        self.write_to_json(save_file_name, about_storage)
+
         
 if __name__ == "__main__":
     nkust = NKUST()
-    nkust.get_hot_news(max_page=1)
-    nkust.get_honors(max_page=1)
-    nkust.get_activity(max_item=10)
+    #nkust.get_hot_news(max_page=1)
+    #nkust.get_honors(max_page=1)
+    #nkust.get_activity(max_item=10)
+    nkust.get_about()
