@@ -16,15 +16,17 @@ class NKUST:
             "activity" : f"https://ws1.nkust.edu.tw/Activity/#",
         }
     
-    def get_target_news_url(self, news_type):
+    def get_target_news_url(self, news_type, max_page=-1):
         target_url = self.site_config[news_type]
         first_page = requests.get(target_url.replace('page','1'))
         soup = BeautifulSoup(first_page.text, 'html.parser')
         # Get the last page number
         last_page = soup.find('span', class_='pg-txt').text
-        last_page = int(re.findall(r'\d+', last_page)[0])
+        last_page = int(re.findall(r'\d+', last_page)[0]) if max_page == -1 else max_page
         
         total_news_url = []
+
+
 
         for page_num in tqdm(range(1, last_page+1)):
             page_url = target_url.replace('page', str(page_num))
@@ -60,8 +62,12 @@ class NKUST:
             'content': content
         }
 
-    def get_hot_news(self):
-        hot_news_url = self.get_target_news_url('hot_news')
+    def get_hot_news(self, max_page=-1):
+        """
+        爬取焦點新聞，以下是相關參數
+        max_page: -1 means all pages, else means the number of pages
+        """
+        hot_news_url = self.get_target_news_url('hot_news', max_page)
         news_storage = []
         for url in tqdm(hot_news_url, desc='hot_news'):
             result = self.get_target_news_content(url)
@@ -72,8 +78,12 @@ class NKUST:
             json.dump(news_storage, f, ensure_ascii=False, indent=4)
             print(f'{save_file_name} saved')
     
-    def get_honors(self):
-        honors_url = self.get_target_news_url('honors')
+    def get_honors(self, max_page=-1):
+        """
+        爬取榮譽榜，以下是相關參數
+        max_page: -1 means all pages, else means the number of pages
+        """
+        honors_url = self.get_target_news_url('honors', max_page)
         news_storage = []
         for url in tqdm(honors_url, desc='honors'):
             result = self.get_target_news_content(url)
