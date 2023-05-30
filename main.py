@@ -119,4 +119,6 @@ class NKUST:
         
 if __name__ == "__main__":
     nkust = NKUST()
+    nkust.get_hot_news()
+    nkust.get_honors()
     nkust.get_activity()
