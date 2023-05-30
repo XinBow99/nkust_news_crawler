@@ -26,7 +26,7 @@ class NKUST:
         
         total_news_url = []
 
-        for page_num in tqdm(range(1, 2)):
+        for page_num in tqdm(range(1, last_page+1)):
             page_url = target_url.replace('page', str(page_num))
             page = requests.get(page_url)
             soup = BeautifulSoup(page.text, 'html.parser')
