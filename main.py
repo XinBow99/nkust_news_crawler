@@ -94,12 +94,16 @@ class NKUST:
             json.dump(news_storage, f, ensure_ascii=False, indent=4)
             print(f'{save_file_name} saved')
     
-    def get_activity(self):
+    def get_activity(self, max_activity=-1):
+        """
+        主要為爬取活動資訊，以下是相關參數
+        max_item: -1 means all activity, else means the number of activity
+        """
         activity_url = self.site_config['activity']
         # <a class="justify-content-center" href="/Activity/Home/Event?Sno=20230221172739Ro9ws6">
         Snos = re.findall(r'Sno=(.*)"', requests.get(activity_url).text)
         # 去除重複
-        Snos = list(set(Snos))
+        Snos = list(set(Snos)) if max_item == -1 else Snos[:max_item]
         news_storage = []
         for Sno in tqdm(Snos, desc='activity'):
             _url = f"https://ws1.nkust.edu.tw/Activity/Home/Event?Sno={Sno}"
@@ -129,6 +133,6 @@ class NKUST:
         
 if __name__ == "__main__":
     nkust = NKUST()
-    nkust.get_hot_news()
-    nkust.get_honors()
-    nkust.get_activity()
+    nkust.get_hot_news(max_page=1)
+    nkust.get_honors(max_page=1)
+    nkust.get_activity(max_activity=10)
